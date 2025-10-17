@@ -261,7 +261,7 @@ const BasketballClubApp = () => {
           <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800">Select Players</h2>
-              <button onClick={() => setShowPlayerSelect(false)} className="text-gray-500 hover:text-gray-700">
+              <button onClick={() => setShowPlayerSelect(false)} className="text-black-500 hover:text-black-700">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -280,8 +280,8 @@ const BasketballClubApp = () => {
                     {member.photo}
                   </div>
                   <div className="flex-1">
-                    <div className="font-bold text-gray-800">{member.name}</div>
-                    <div className="text-sm text-gray-600">#{member.number}</div>
+                    <div className="font-bold text-black-800">{member.name}</div>
+                    <div className="text-sm text-black-600">#{member.number}</div>
                   </div>
                   {currentMatch.players.includes(member.id) && (
                     <Check className="w-6 h-6 text-orange-600" />
@@ -360,7 +360,7 @@ const BasketballClubApp = () => {
           <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800">Edit Player</h2>
-              <button onClick={() => setEditingMember(null)} className="text-gray-500 hover:text-gray-700">
+              <button onClick={() => setEditingMember(null)} className="text-black-500 hover:text-black-700">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -377,7 +377,7 @@ const BasketballClubApp = () => {
                 placeholder="Full Name"
                 value={editingMember.name}
                 onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 border border-black-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               <input
                 type="text"
@@ -395,7 +395,7 @@ const BasketballClubApp = () => {
               />
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="text-xs text-gray-600 mb-1 block">Points</label>
+                  <label className="text-xs text-black-600 mb-1 block">Points</label>
                   <input
                     type="number"
                     value={editingMember.stats.points}
