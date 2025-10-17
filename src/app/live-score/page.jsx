@@ -12,7 +12,7 @@ const BasketballClubApp = () => {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   
-  const ADMIN_PASSWORD = 'admin123';
+  const ADMIN_PASSWORD = 'sahilbhaiya123';
 
   const [members, setMembers] = useState([]);
   const [currentMatch, setCurrentMatch] = useState({
