@@ -1,5 +1,5 @@
 'use client';
-import { Bell, Calendar, ChevronRight, Edit2, History, Save, Trophy, Users, X } from 'lucide-react';
+import { Bell, ChevronRight, Edit2, History, Save, Trophy, Users, X } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -265,10 +265,10 @@ const PaulinesHomepage = () => {
                     <History className="w-6 h-6" />
                     <span className="text-sm">History</span>
                   </button>
-                  <button onClick={() => navigateTo('Schedule')} className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-xl font-semibold transition flex flex-col items-center gap-2">
-                    <Calendar className="w-6 h-6" />
+                  <Link href="/tournament" className="bg-green-600 hover:bg-green-700 text-white p-4 rounded-xl font-semibold transition flex flex-col items-center gap-2">
+                    <Trophy className="w-6 h-6" />
                     <span className="text-sm">Schedule</span>
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>
