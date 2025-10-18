@@ -26,6 +26,10 @@ const BasketballClubApp = () => {
   matchDate: ''
   });
   const [matchHistory, setMatchHistory] = useState([]);
+const [cheers, setCheers] = useState({
+  total: 0,
+  recent: []
+});
 
   const [editingMatch, setEditingMatch] = useState(false);
   const [showAddMember, setShowAddMember] = useState(false);
@@ -90,6 +94,20 @@ const BasketballClubApp = () => {
     return () => unsubscribe();
   }, []);
 
+  // Firebase: Listen to cheers
+useEffect(() => {
+  const cheersRef = ref(database, 'currentMatch/cheers');
+  const unsubscribe = onValue(cheersRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      setCheers(data);
+    } else {
+      setCheers({ total: 0, recent: [] });
+    }
+  });
+  return () => unsubscribe();
+}, []);
+
   const handleLogin = () => {
     if (password === ADMIN_PASSWORD) {
       setIsAdmin(true);
@@ -148,6 +166,25 @@ const BasketballClubApp = () => {
       players: newPlayers
     });
   };
+
+  const addCheer = (type, emoji) => {
+  const matchRef = ref(database, 'currentMatch/cheers');
+  const timestamp = new Date().toISOString();
+  const newCheer = {
+    type,
+    emoji,
+    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+    timestamp
+  };
+  
+  const newTotal = (cheers.total || 0) + 1;
+  const newRecent = [newCheer, ...(cheers.recent || [])].slice(0, 10);
+  
+  update(matchRef, {
+    total: newTotal,
+    recent: newRecent
+  });
+};
 
   const saveMatchToHistory = () => {
     if (!isAdmin) return;
@@ -627,6 +664,106 @@ const BasketballClubApp = () => {
                   </div>
                 )}
 
+                {/* Cheer Section - Enhanced */}
+<div className="mb-6 p-6 bg-gradient-to-r from-orange-50 via-yellow-50 to-orange-50 rounded-xl border-2 border-orange-200">
+  <div className="flex justify-between items-center mb-4">
+    <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+      📣 Cheer for the Team!
+    </h3>
+    <div className="bg-orange-600 text-white px-4 py-2 rounded-full font-bold text-sm">
+      {cheers.total || 0} Cheers 🎉
+    </div>
+  </div>
+  
+  {/* Cheer Buttons */}
+  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+    <button
+      onClick={(e) => {
+        new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3').play();
+        addCheer('Cheer', '🎉');
+        e.currentTarget.classList.add('animate-bounce');
+        setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
+      }}
+      className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition transform"
+    >
+      🎉 Cheer!
+    </button>
+    <button
+      onClick={(e) => {
+        new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3').play();
+        addCheer('Applause', '👏');
+        e.currentTarget.classList.add('animate-bounce');
+        setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
+      }}
+      className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition transform"
+    >
+      👏 Applause!
+    </button>
+    <button
+      onClick={(e) => {
+        new Audio('https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3').play();
+        addCheer('Fire', '🔥');
+        e.currentTarget.classList.add('animate-bounce');
+        setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
+      }}
+      className="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition transform"
+    >
+      🔥 Fire!
+    </button>
+    <button
+      onClick={(e) => {
+        new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3').play();
+        addCheer('Lets Go', '🏀');
+        e.currentTarget.classList.add('animate-bounce');
+        setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
+      }}
+      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition transform"
+    >
+      🏀 Let's Go!
+    </button>
+    <button
+      onClick={(e) => {
+        new Audio('https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3').play();
+        addCheer('Defense', '⚡');
+        e.currentTarget.classList.add('animate-bounce');
+        setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
+      }}
+      className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition transform"
+    >
+      ⚡ Defense!
+    </button>
+    <button
+      onClick={(e) => {
+        new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3').play();
+        addCheer('Shoot', '🎯');
+        e.currentTarget.classList.add('animate-bounce');
+        setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
+      }}
+      className="bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-xl font-bold shadow-lg hover:scale-105 transition transform"
+    >
+      🎯 Shoot!
+    </button>
+  </div>
+
+  {/* Recent Cheers Feed */}
+  {cheers.recent && cheers.recent.length > 0 && (
+    <div className="bg-white rounded-xl p-4 max-h-32 overflow-y-auto">
+      <h4 className="text-sm font-bold text-gray-700 mb-2">Recent Cheers 🎊</h4>
+      <div className="space-y-2">
+        {cheers.recent.map((cheer, idx) => (
+          <div key={idx} className="flex items-center justify-between text-sm animate-fade-in">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{cheer.emoji}</span>
+              <span className="font-semibold text-gray-700">{cheer.type}</span>
+            </div>
+            <span className="text-xs text-gray-500">{cheer.time}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
+
                 {isAdmin && (
                   <div className="space-y-3">
                     <button onClick={() => setShowPlayerSelect(true)} className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2">
@@ -802,10 +939,30 @@ const BasketballClubApp = () => {
                 </div>
               ))}
             </div>
+            
           </div>
         )}
+        
       </div>
+ {/* ADD THIS STYLE HERE */}
+      <style jsx>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+      `}</style>
+      
     </div>
+    
   );
 };
 
