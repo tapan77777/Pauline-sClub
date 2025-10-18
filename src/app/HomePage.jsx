@@ -24,7 +24,7 @@ const PaulinesHomepage = () => {
   });
 
   const [recentMatches] = useState([
-    { id: 1, opponent: 'Thunder Squad', score: '87-82', result: 'W', date: '2025-10-10', image: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400' },
+    { id: 1, opponent: 'Sports Arena BPR', score: '54-12', result: 'W', date: '18th October 2025', image: '/news/firstmatch.jpeg' },
     { id: 2, opponent: 'Eagles United', score: '76-79', result: 'L', date: '2025-10-05', image: 'https://images.unsplash.com/photo-1608245449230-4ac19066d2d0?w=400' },
     { id: 3, opponent: 'Phoenix Risers', score: '92-88', result: 'W', date: '2025-09-28', image: 'https://images.unsplash.com/photo-1519861531473-9200262188bf?w=400' },
   ]);
