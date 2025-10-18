@@ -95,12 +95,18 @@ const [cheers, setCheers] = useState({
   }, []);
 
   // Firebase: Listen to cheers
+// Firebase: Listen to cheers
 useEffect(() => {
   const cheersRef = ref(database, 'currentMatch/cheers');
   const unsubscribe = onValue(cheersRef, (snapshot) => {
     const data = snapshot.val();
     if (data) {
       setCheers(data);
+      
+      // Play sound for everyone when new cheer arrives
+      if (data.lastCheer && data.lastCheer.soundUrl && data.lastCheer.playSound) {
+        new Audio(data.lastCheer.soundUrl).play().catch(err => console.log('Audio play failed:', err));
+      }
     } else {
       setCheers({ total: 0, recent: [] });
     }
@@ -167,14 +173,16 @@ useEffect(() => {
     });
   };
 
-  const addCheer = (type, emoji) => {
+const addCheer = (type, emoji, soundUrl) => {
   const matchRef = ref(database, 'currentMatch/cheers');
   const timestamp = new Date().toISOString();
   const newCheer = {
     type,
     emoji,
     time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-    timestamp
+    timestamp,
+    soundUrl,  // ADD THIS
+    playSound: true  // ADD THIS - trigger for others
   };
   
   const newTotal = (cheers.total || 0) + 1;
@@ -182,7 +190,8 @@ useEffect(() => {
   
   update(matchRef, {
     total: newTotal,
-    recent: newRecent
+    recent: newRecent,
+    lastCheer: newCheer  // ADD THIS - to trigger sound for everyone
   });
 };
 
@@ -678,9 +687,8 @@ useEffect(() => {
   {/* Cheer Buttons */}
   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
     <button
-      onClick={(e) => {
-        new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3').play();
-        addCheer('Cheer', '🎉');
+     onClick={(e) => {
+  addCheer('Cheer', '🎉', 'https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
         e.currentTarget.classList.add('animate-bounce');
         setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
       }}
@@ -690,8 +698,7 @@ useEffect(() => {
     </button>
     <button
       onClick={(e) => {
-        new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3').play();
-        addCheer('Applause', '👏');
+  addCheer('Applause', '👏', 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3');
         e.currentTarget.classList.add('animate-bounce');
         setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
       }}
@@ -701,8 +708,7 @@ useEffect(() => {
     </button>
     <button
       onClick={(e) => {
-        new Audio('https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3').play();
-        addCheer('Fire', '🔥');
+  addCheer('Fire', '🔥', 'https://assets.mixkit.co/active_storage/sfx/2021/2021-preview.mp3');
         e.currentTarget.classList.add('animate-bounce');
         setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
       }}
@@ -712,8 +718,7 @@ useEffect(() => {
     </button>
     <button
       onClick={(e) => {
-        new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3').play();
-        addCheer('Lets Go', '🏀');
+  addCheer('Lets Go', '🏀', 'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
         e.currentTarget.classList.add('animate-bounce');
         setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
       }}
@@ -723,8 +728,7 @@ useEffect(() => {
     </button>
     <button
       onClick={(e) => {
-        new Audio('https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3').play();
-        addCheer('Defense', '⚡');
+  addCheer('Defense', '⚡', 'https://assets.mixkit.co/active_storage/sfx/2001/2001-preview.mp3');
         e.currentTarget.classList.add('animate-bounce');
         setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
       }}
@@ -733,9 +737,8 @@ useEffect(() => {
       ⚡ Defense!
     </button>
     <button
-      onClick={(e) => {
-        new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3').play();
-        addCheer('Shoot', '🎯');
+     onClick={(e) => {
+  addCheer('Shoot', '🎯', 'https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
         e.currentTarget.classList.add('animate-bounce');
         setTimeout(() => e.currentTarget.classList.remove('animate-bounce'), 500);
       }}
