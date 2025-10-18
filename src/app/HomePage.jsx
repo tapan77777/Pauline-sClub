@@ -30,9 +30,10 @@ const PaulinesHomepage = () => {
   ]);
 
   const [announcements, setAnnouncements] = useState([
-    { id: 1, title: 'Season Opening Next Week', date: '2025-10-15', content: 'Get ready for an exciting new season!' },
+     { id: 1, title: 'Paulines VS Sports Arena,BPR match 11:30am', date: '18th October 2025', content: 'You can check live scores and match updates directly on our Qucik Acess' },
+    { id: 3, title: 'Season Opening Next Week', date: '2025-10-15', content: 'Get ready for an exciting new season!' },
     { id: 2, title: 'New Tournament', date: '2025-10-18', content: 'Check out our Match updates.' },
-    { id: 3, title: 'Team Tryouts Announced', date: '2024-10-08', content: 'Open tryouts for new players starting soon.' },
+   ,
   ]);
 
   const [newAnnouncement, setNewAnnouncement] = useState({ title: '', content: '' });
