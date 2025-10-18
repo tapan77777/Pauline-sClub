@@ -226,9 +226,9 @@ const TeamPage = () => {
                           className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white text-gray-900 font-bold text-xl px-6 py-2 rounded-full shadow-lg">
+                      {/* <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white text-gray-900 font-bold text-xl px-6 py-2 rounded-full shadow-lg">
                         #{player.number}
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 
