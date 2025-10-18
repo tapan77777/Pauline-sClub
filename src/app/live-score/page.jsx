@@ -21,7 +21,9 @@ const BasketballClubApp = () => {
     awayTeam: 'Opponent Team',
     quarter: 1,
     isLive: false,
-    players: []
+    players: [],
+    startTime: '',
+  matchDate: ''
   });
   const [matchHistory, setMatchHistory] = useState([]);
 
@@ -434,7 +436,7 @@ const BasketballClubApp = () => {
               <button
                 onClick={updateMember}
                 className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-semibold transition"
-              >
+              >isAdmin
                 Save Changes
               </button>
               <button
@@ -529,16 +531,36 @@ const BasketballClubApp = () => {
 
               <div className="p-4 sm:p-8">
                 {isAdmin && editingMatch && (
-                  <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-orange-50 rounded-lg">
-                    <input
-                      type="text"
-                      value={currentMatch.awayTeam}
-                      onChange={(e) => updateAwayTeam(e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm sm:text-base"
-                      placeholder="Opponent team name"
-                    />
-                  </div>
-                )}
+  <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-orange-50 rounded-lg space-y-3">
+    <input
+      type="text"
+      value={currentMatch.awayTeam}
+      onChange={(e) => updateAwayTeam(e.target.value)}
+      className="w-full px-3 sm:px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm sm:text-base"
+      placeholder="Opponent team name"
+    />
+    <div className="grid grid-cols-2 gap-3">
+      <input
+        type="date"
+        value={currentMatch.matchDate}
+        onChange={(e) => {
+          const matchRef = ref(database, 'currentMatch');
+          update(matchRef, { matchDate: e.target.value });
+        }}
+        className="w-full px-3 sm:px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm sm:text-base"
+      />
+      <input
+        type="time"
+        value={currentMatch.startTime}
+        onChange={(e) => {
+          const matchRef = ref(database, 'currentMatch');
+          update(matchRef, { startTime: e.target.value });
+        }}
+        className="w-full px-3 sm:px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm sm:text-base"
+      />
+    </div>
+  </div>
+)}
 
                 <div className="grid grid-cols-3 gap-4 sm:gap-8 items-center mb-6 sm:mb-8">
                   <div className="text-center">
@@ -555,20 +577,26 @@ const BasketballClubApp = () => {
                   </div>
 
                   <div className="text-center">
-                    <div className="text-2xl sm:text-4xl font-bold text-gray-300 mb-3 sm:mb-4">VS</div>
-                    <div className="bg-gray-100 rounded-lg p-2 sm:p-3 inline-block">
-                      <div className="text-xs sm:text-sm text-gray-600 mb-1">Quarter</div>
-                      <div className="flex items-center gap-2 sm:gap-3 justify-center">
-                        {isAdmin && (
-                          <button onClick={() => changeQuarter(-1)} className="bg-gray-300 hover:bg-gray-400 text-gray-700 w-6 h-6 sm:w-8 sm:h-8 rounded-full font-bold text-sm sm:text-base" disabled={currentMatch.quarter === 1}>-</button>
-                        )}
-                        <div className="text-2xl sm:text-3xl font-bold text-gray-800 min-w-[1.5rem] sm:min-w-[2rem]">{currentMatch.quarter}</div>
-                        {isAdmin && (
-                          <button onClick={() => changeQuarter(1)} className="bg-gray-300 hover:bg-gray-400 text-gray-700 w-6 h-6 sm:w-8 sm:h-8 rounded-full font-bold text-sm sm:text-base" disabled={currentMatch.quarter === 4}>+</button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+  {currentMatch.matchDate && currentMatch.startTime && (
+    <div className="mb-2 text-xs sm:text-sm text-gray-600 font-medium">
+      📅 {new Date(currentMatch.matchDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} 
+      {' '}⏰ {currentMatch.startTime}
+    </div>
+  )}
+  <div className="text-2xl sm:text-4xl font-bold text-gray-300 mb-3 sm:mb-4">VS</div>
+  <div className="bg-gray-100 rounded-lg p-2 sm:p-3 inline-block">
+    <div className="text-xs sm:text-sm text-gray-600 mb-1">Quarter</div>
+    <div className="flex items-center gap-2 sm:gap-3 justify-center">
+      {isAdmin && (
+        <button onClick={() => changeQuarter(-1)} className="bg-gray-300 hover:bg-gray-400 text-gray-700 w-6 h-6 sm:w-8 sm:h-8 rounded-full font-bold text-sm sm:text-base" disabled={currentMatch.quarter === 1}>-</button>
+      )}
+      <div className="text-2xl sm:text-3xl font-bold text-gray-800 min-w-[1.5rem] sm:min-w-[2rem]">{currentMatch.quarter}</div>
+      {isAdmin && (
+        <button onClick={() => changeQuarter(1)} className="bg-gray-300 hover:bg-gray-400 text-gray-700 w-6 h-6 sm:w-8 sm:h-8 rounded-full font-bold text-sm sm:text-base" disabled={currentMatch.quarter === 4}>+</button>
+      )}
+    </div>
+  </div>
+</div>
 
                   <div className="text-center">
                     <div className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">AWAY</div>
