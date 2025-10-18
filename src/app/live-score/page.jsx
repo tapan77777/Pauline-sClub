@@ -38,6 +38,12 @@ const [cheers, setCheers] = useState({
   const [selectedMatchDetail, setSelectedMatchDetail] = useState(null);
   const [newMember, setNewMember] = useState({ name: '', position: '', number: '', photo: '' });
 
+  const [liveStreamUrl, setLiveStreamUrl] = useState('');
+const [comments, setComments] = useState([]);
+const [newComment, setNewComment] = useState('');
+const [userName, setUserName] = useState('');
+const [showNameInput, setShowNameInput] = useState(true);
+
   // Firebase: Listen to members
   useEffect(() => {
     const membersRef = ref(database, 'members');
@@ -94,7 +100,7 @@ const [cheers, setCheers] = useState({
     return () => unsubscribe();
   }, []);
 
-  // Firebase: Listen to cheers
+  
 // Firebase: Listen to cheers
 useEffect(() => {
   const cheersRef = ref(database, 'currentMatch/cheers');
@@ -112,6 +118,43 @@ useEffect(() => {
     }
   });
   return () => unsubscribe();
+}, []);
+
+// Firebase: Listen to live stream
+useEffect(() => {
+  const streamRef = ref(database, 'currentMatch/liveStream');
+  const unsubscribe = onValue(streamRef, (snapshot) => {
+    const data = snapshot.val();
+    setLiveStreamUrl(data || '');
+  });
+  return () => unsubscribe();
+}, []);
+
+// Firebase: Listen to comments
+useEffect(() => {
+  const commentsRef = ref(database, 'currentMatch/comments');
+  const unsubscribe = onValue(commentsRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      const commentsArray = Object.entries(data).map(([id, comment]) => ({
+        id,
+        ...comment
+      })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      setComments(commentsArray);
+    } else {
+      setComments([]);
+    }
+  });
+  return () => unsubscribe();
+}, []);
+
+// Load username from browser
+useEffect(() => {
+  const savedName = localStorage.getItem('userName');
+  if (savedName) {
+    setUserName(savedName);
+    setShowNameInput(false);
+  }
 }, []);
 
   const handleLogin = () => {
@@ -193,6 +236,53 @@ const addCheer = (type, emoji, soundUrl) => {
     recent: newRecent,
     lastCheer: newCheer  // ADD THIS - to trigger sound for everyone
   });
+};
+//live stream function
+const updateLiveStream = (url) => {
+  if (!isAdmin) return;
+  const streamRef = ref(database, 'currentMatch/liveStream');
+  set(streamRef, url);
+};
+
+const addComment = () => {
+  if (!newComment.trim() || !userName.trim()) return;
+  
+  const commentsRef = ref(database, 'currentMatch/comments');
+  const newCommentRef = push(commentsRef);
+  
+  set(newCommentRef, {
+    text: newComment,
+    userName: userName,
+    timestamp: new Date().toISOString(),
+    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+  });
+  
+  setNewComment('');
+};
+
+const deleteComment = (commentId) => {
+  if (!isAdmin) return;
+  const commentRef = ref(database, `currentMatch/comments/${commentId}`);
+  remove(commentRef);
+};
+
+const saveName = () => {
+  if (userName.trim()) {
+    localStorage.setItem('userName', userName);
+    setShowNameInput(false);
+  }
+};
+
+const getYouTubeEmbedUrl = (url) => {
+  if (!url) return '';
+  const videoId = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+  return videoId ? `https://www.youtube.com/embed/${videoId[1]}?autoplay=1` : '';
+};
+
+const getTwitchEmbedUrl = (url) => {
+  if (!url) return '';
+  const channelMatch = url.match(/twitch\.tv\/([a-zA-Z0-9_]+)/);
+  return channelMatch ? `https://player.twitch.tv/?channel=${channelMatch[1]}&parent=${window.location.hostname}` : '';
 };
 
   const saveMatchToHistory = () => {
@@ -555,6 +645,148 @@ const addCheer = (type, emoji, soundUrl) => {
           </div>
         </div>
       </div>
+
+
+
+      {/* Live Stream & Comments Section */}
+      
+{(liveStreamUrl || isAdmin) && (
+  <div className="mb-6 grid lg:grid-cols-3 gap-6">
+    {/* Live Stream */}
+    <div className="lg:col-span-2">
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-red-400 animate-pulse"></div>
+            <span className="text-white font-semibold text-sm sm:text-base">LIVE STREAM</span>
+          </div>
+          {isAdmin && (
+            <button
+              onClick={() => {
+                const url = prompt('Enter YouTube or Twitch stream URL:');
+                if (url !== null) updateLiveStream(url);
+              }}
+              className="text-white hover:bg-white/20 p-2 rounded-lg transition"
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        
+        {liveStreamUrl ? (
+          <div className="relative pt-[56.25%] bg-black">
+            <iframe
+              src={getYouTubeEmbedUrl(liveStreamUrl) || getTwitchEmbedUrl(liveStreamUrl)}
+              className="absolute top-0 left-0 w-full h-full"
+              frameBorder="0"
+              allowFullScreen
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
+          </div>
+        ) : (
+          <div className="p-12 text-center text-gray-500">
+            <div className="text-6xl mb-4">📺</div>
+            <p>No live stream active</p>
+            {isAdmin && <p className="text-sm mt-2">Click edit to add stream URL</p>}
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* Live Comments Chat */}
+    <div className="lg:col-span-1">
+      <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-full flex flex-col">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3">
+          <h3 className="text-white font-semibold text-sm sm:text-base flex items-center gap-2">
+            💬 Live Chat
+            <span className="bg-white/20 px-2 py-0.5 rounded-full text-xs">{comments.length}</span>
+          </h3>
+        </div>
+
+        {/* Comments List */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 max-h-[400px]">
+          {comments.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              <p className="text-sm">No comments yet</p>
+              <p className="text-xs mt-1">Be the first to comment! 💬</p>
+            </div>
+          ) : (
+            comments.map((comment) => (
+              <div key={comment.id} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition group">
+                <div className="flex justify-between items-start mb-1">
+                  <span className="font-bold text-sm text-blue-600">{comment.userName}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">{comment.time}</span>
+                    {isAdmin && (
+                      <button
+                        onClick={() => deleteComment(comment.id)}
+                        className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700">{comment.text}</p>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Comment Input */}
+        <div className="border-t p-4 bg-white">
+          {showNameInput ? (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && saveName()}
+                placeholder="Enter your name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+              <button
+                onClick={saveName}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-semibold text-sm transition"
+              >
+                Set Name
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-gray-600">Commenting as: <strong>{userName}</strong></span>
+                <button
+                  onClick={() => setShowNameInput(true)}
+                  className="text-xs text-blue-600 hover:underline"
+                >
+                  Change
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && addComment()}
+                  placeholder="Type a message..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+                <button
+                  onClick={addComment}
+                  disabled={!newComment.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white px-4 py-2 rounded-lg font-semibold transition text-sm"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-4 py-4 sm:py-8">
