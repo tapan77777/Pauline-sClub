@@ -855,7 +855,7 @@ const getSortedStandings = (group = null) => {
                           </div>
                           <div className="text-center">
                             <div className="text-sm text-gray-500 mb-2">Final</div>
-                            <div className="text-xl font-bold text-gray-400">-</div>
+                            <div className="text-xl font-bold text-black-400">-</div>
                           </div>
                           <div className="text-center">
                             <div className="text-3xl mb-2">{getTeamLogo(fixture.awayTeam)}</div>
