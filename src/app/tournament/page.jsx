@@ -17,6 +17,7 @@ const TournamentPage = () => {
   const [selectedTournament, setSelectedTournament] = useState(null);
   const [activeTab, setActiveTab] = useState('table');
   
+  const [selectedGroup, setSelectedGroup] = useState('A');
   const [showAddTournament, setShowAddTournament] = useState(false);
   const [showAddTeam, setShowAddTeam] = useState(false);
   const [showAddFixture, setShowAddFixture] = useState(false);
@@ -30,10 +31,11 @@ const TournamentPage = () => {
     endDate: ''
   });
   
-  const [newTeam, setNewTeam] = useState({
-    name: '',
-    logo: '⚽'
-  });
+ const [newTeam, setNewTeam] = useState({
+  name: '',
+  logo: '⚽',
+  group: 'A'  // ADD THIS
+});
   
   const [newFixture, setNewFixture] = useState({
     homeTeam: '',
@@ -115,34 +117,35 @@ const TournamentPage = () => {
     }
   };
 
-  const addTeamToTournament = () => {
-    if (!isAdmin || !newTeam.name || !selectedTournament) return;
-    
-    const teamRef = ref(database, `tournaments/${selectedTournament.id}/teams`);
-    const newTeamRef = push(teamRef);
-    
-    set(newTeamRef, {
-      name: newTeam.name,
-      logo: newTeam.logo
-    });
+const addTeamToTournament = () => {
+  if (!isAdmin || !newTeam.name || !selectedTournament) return;
+  
+  const teamRef = ref(database, `tournaments/${selectedTournament.id}/teams`);
+  const newTeamRef = push(teamRef);
+  
+  set(newTeamRef, {
+    name: newTeam.name,
+    logo: newTeam.logo,
+    group: selectedTournament.format === 'Group Stage' ? newTeam.group : null  // ADD THIS
+  });
 
-    // Initialize standings
-    const standingsRef = ref(database, `tournaments/${selectedTournament.id}/standings/${newTeamRef.key}`);
-    set(standingsRef, {
-      teamId: newTeamRef.key,
-      played: 0,
-      won: 0,
-      drawn: 0,
-      lost: 0,
-      goalsFor: 0,
-      goalsAgainst: 0,
-      goalDifference: 0,
-      points: 0
-    });
-    
-    setNewTeam({ name: '', logo: '⚽' });
-    setShowAddTeam(false);
-  };
+  const standingsRef = ref(database, `tournaments/${selectedTournament.id}/standings/${newTeamRef.key}`);
+  set(standingsRef, {
+    teamId: newTeamRef.key,
+    played: 0,
+    won: 0,
+    drawn: 0,
+    lost: 0,
+    goalsFor: 0,
+    goalsAgainst: 0,
+    goalDifference: 0,
+    points: 0,
+    group: selectedTournament.format === 'Group Stage' ? newTeam.group : null  // ADD THIS
+  });
+  
+  setNewTeam({ name: '', logo: '⚽', group: 'A' });
+  setShowAddTeam(false);
+};
 
   const deleteTeam = (teamId) => {
     if (!isAdmin || !selectedTournament) return;
@@ -258,22 +261,23 @@ const TournamentPage = () => {
     return team ? team.logo : '⚽';
   };
 
-  const getSortedStandings = () => {
-    if (!selectedTournament?.standings) return [];
-    
-    return Object.entries(selectedTournament.standings)
-      .map(([teamId, standing]) => ({
-        teamId,
-        ...standing,
-        teamName: getTeamName(teamId),
-        teamLogo: getTeamLogo(teamId)
-      }))
-      .sort((a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
-        if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
-        return b.goalsFor - a.goalsFor;
-      });
-  };
+const getSortedStandings = (group = null) => {
+  if (!selectedTournament?.standings) return [];
+  
+  return Object.entries(selectedTournament.standings)
+    .map(([teamId, standing]) => ({
+      teamId,
+      ...standing,
+      teamName: getTeamName(teamId),
+      teamLogo: getTeamLogo(teamId)
+    }))
+    .filter(s => group ? s.group === group : true)  // ADD THIS FILTER
+    .sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
+      return b.goalsFor - a.goalsFor;
+    });
+};
 
   const getFixturesByStatus = (status) => {
     if (!selectedTournament?.fixtures) return [];
@@ -371,37 +375,49 @@ const TournamentPage = () => {
       )}
 
       {/* Add Team Modal */}
-      {showAddTeam && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">Add Team</h2>
-              <button onClick={() => setShowAddTeam(false)} className="text-gray-500 hover:text-gray-700">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Team Logo (emoji)"
-                value={newTeam.logo}
-                onChange={(e) => setNewTeam({ ...newTeam, logo: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              <input
-                type="text"
-                placeholder="Team Name"
-                value={newTeam.name}
-                onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              <button onClick={addTeamToTournament} className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-semibold transition">
-                Add Team
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+{showAddTeam && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-gray-800">Add Team</h2>
+        <button onClick={() => setShowAddTeam(false)} className="text-gray-500 hover:text-gray-700">
+          <X className="w-6 h-6" />
+        </button>
+      </div>
+      <div className="space-y-4">
+        <input
+          type="text"
+          placeholder="Team Logo (emoji)"
+          value={newTeam.logo}
+          onChange={(e) => setNewTeam({ ...newTeam, logo: e.target.value })}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
+        <input
+          type="text"
+          placeholder="Team Name"
+          value={newTeam.name}
+          onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+        />
+        {selectedTournament?.format === 'Group Stage' && (
+          <select
+            value={newTeam.group}
+            onChange={(e) => setNewTeam({ ...newTeam, group: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            <option value="A">Group A</option>
+            <option value="B">Group B</option>
+            <option value="C">Group C</option>
+            <option value="D">Group D</option>
+          </select>
+        )}
+        <button onClick={addTeamToTournament} className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-semibold transition">
+          Add Team
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Add Fixture Modal */}
       {showAddFixture && selectedTournament && (
@@ -622,55 +638,137 @@ const TournamentPage = () => {
             {/* Content */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
               {activeTab === 'table' && (
-                <div className="p-4 sm:p-6">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6">League Table</h2>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr className="border-b-2 border-gray-200">
-                          <th className="text-left py-3 px-2 text-sm font-bold text-gray-600">#</th>
-                          <th className="text-left py-3 px-2 text-sm font-bold text-gray-600">Team</th>
-                          <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">P</th>
-                          <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">W</th>
-                          <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">D</th>
-                          <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">L</th>
-                          <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">GF</th>
-                          <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">GA</th>
-                          <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">GD</th>
-                          <th className="text-center py-3 px-2 text-sm font-bold text-gray-600 bg-orange-50">Pts</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {getSortedStandings().map((standing, index) => (
-                          <tr key={standing.teamId} className="border-b border-gray-100 hover:bg-gray-50 transition">
-                            <td className="py-3 px-2 text-sm font-bold text-gray-600">{index + 1}</td>
-                            <td className="py-3 px-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-2xl">{standing.teamLogo}</span>
-                                <span className="font-semibold text-gray-800">{standing.teamName}</span>
-                              </div>
-                            </td>
-                            <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.played}</td>
-                            <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.won}</td>
-                            <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.drawn}</td>
-                            <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.lost}</td>
-                            <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.goalsFor}</td>
-                            <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.goalsAgainst}</td>
-                            <td className="text-center py-3 px-2 text-sm font-semibold text-gray-800">{standing.goalDifference}</td>
-                            <td className="text-center py-3 px-2 text-lg font-bold text-orange-600 bg-orange-50">{standing.points}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  {getSortedStandings().length === 0 && (
-                    <div className="text-center py-12 text-gray-500">
-                      <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
-                      <p>No standings data yet. Add teams and fixtures to get started!</p>
+  <div className="p-4 sm:p-6">
+    {selectedTournament.format === 'Knockout' ? (
+      // KNOCKOUT BRACKET VIEW
+      <div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Knockout Bracket</h2>
+        <div className="text-center py-12 text-gray-500">
+          <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
+          <p>Knockout bracket view coming soon!</p>
+          <p className="text-sm mt-2">Use Fixtures tab to manage knockout matches</p>
+        </div>
+      </div>
+    ) : selectedTournament.format === 'Group Stage' ? (
+      // GROUP STAGE TABLES
+      <div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Group Stage Standings</h2>
+        
+        {/* Group Tabs */}
+        <div className="flex gap-2 mb-6 overflow-x-auto">
+          {['A', 'B', 'C', 'D'].map(group => {
+            const groupTeams = getSortedStandings(group);
+            if (groupTeams.length === 0) return null;
+            return (
+              <button
+                key={group}
+                onClick={() => setSelectedGroup(group)}
+                className={`px-6 py-3 rounded-lg font-semibold transition whitespace-nowrap ${
+                  selectedGroup === group
+                    ? 'bg-orange-600 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                Group {group}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Group Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b-2 border-gray-200">
+                <th className="text-left py-3 px-2 text-sm font-bold text-gray-600">#</th>
+                <th className="text-left py-3 px-2 text-sm font-bold text-gray-600">Team</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">P</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">W</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">D</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">L</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">GF</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">GA</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">GD</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600 bg-orange-50">Pts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {getSortedStandings(selectedGroup).map((standing, index) => (
+                <tr key={standing.teamId} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                  <td className="py-3 px-2 text-sm font-bold text-gray-600">{index + 1}</td>
+                  <td className="py-3 px-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{standing.teamLogo}</span>
+                      <span className="font-semibold text-gray-800">{standing.teamName}</span>
                     </div>
-                  )}
-                </div>
-              )}
+                  </td>
+                  <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.played}</td>
+                  <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.won}</td>
+                  <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.drawn}</td>
+                  <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.lost}</td>
+                  <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.goalsFor}</td>
+                  <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.goalsAgainst}</td>
+                  <td className="text-center py-3 px-2 text-sm font-semibold text-gray-800">{standing.goalDifference}</td>
+                  <td className="text-center py-3 px-2 text-lg font-bold text-orange-600 bg-orange-50">{standing.points}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    ) : (
+      // LEAGUE TABLE (existing code)
+      <div>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">League Table</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b-2 border-gray-200">
+                <th className="text-left py-3 px-2 text-sm font-bold text-gray-600">#</th>
+                <th className="text-left py-3 px-2 text-sm font-bold text-gray-600">Team</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">P</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">W</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">D</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">L</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">GF</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">GA</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600">GD</th>
+                <th className="text-center py-3 px-2 text-sm font-bold text-gray-600 bg-orange-50">Pts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {getSortedStandings().map((standing, index) => (
+                <tr key={standing.teamId} className="border-b border-gray-100 hover:bg-gray-50 transition">
+                  <td className="py-3 px-2 text-sm font-bold text-gray-600">{index + 1}</td>
+                  <td className="py-3 px-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl">{standing.teamLogo}</span>
+                      <span className="font-semibold text-gray-800">{standing.teamName}</span>
+                    </div>
+                  </td>
+                  <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.played}</td>
+                  <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.won}</td>
+                  <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.drawn}</td>
+                  <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.lost}</td>
+                  <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.goalsFor}</td>
+                  <td className="text-center py-3 px-2 text-sm text-gray-600">{standing.goalsAgainst}</td>
+                  <td className="text-center py-3 px-2 text-sm font-semibold text-gray-800">{standing.goalDifference}</td>
+                  <td className="text-center py-3 px-2 text-lg font-bold text-orange-600 bg-orange-50">{standing.points}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {getSortedStandings().length === 0 && (
+          <div className="text-center py-12 text-gray-500">
+            <Trophy className="w-12 h-12 mx-auto mb-4 opacity-30" />
+            <p>No standings data yet. Add teams and fixtures to get started!</p>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+)}
 
               {activeTab === 'fixtures' && (
                 <div className="p-4 sm:p-6">
