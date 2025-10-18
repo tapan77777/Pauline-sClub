@@ -13,7 +13,7 @@ const TeamPage = () => {
       nickname: "PD",
       number: 7,
       position: "Point Guard",
-      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
+      image: "/tshirt.png",
       height: "5'10\"",
       age: 24,
       nationality: "🇺🇸",
@@ -176,7 +176,7 @@ const TeamPage = () => {
       </div>
 
       {/* Player Cards Grid */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-8 px-4">
         {players.map((player) => (
           <div
             key={player.id}
@@ -186,7 +186,7 @@ const TeamPage = () => {
             onClick={() => setSelectedPlayer(player)}
           >
             <div
-              className={`relative w-full h-[480px] transition-transform duration-700 transform-style-3d cursor-pointer ${
+              className={`relative w-full h-[520px] transition-transform duration-700 transform-style-3d cursor-pointer ${
                 flippedCard === player.id ? 'rotate-y-180' : ''
               }`}
               style={{
@@ -217,20 +217,15 @@ const TeamPage = () => {
                   </div>
 
                   {/* Player Image */}
-                  <div className="absolute top-20 left-0 right-0 flex justify-center z-10">
-                    <div className="relative">
-                      <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-white/30 shadow-2xl">
-                        <img
-                          src={player.image}
-                          alt={player.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      {/* <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white text-gray-900 font-bold text-xl px-6 py-2 rounded-full shadow-lg">
-                        #{player.number}
-                      </div> */}
-                    </div>
-                  </div>
+               {/* Player Image */}
+<div className="absolute top-16 left-0 right-0 bottom-32 flex justify-center items-center z-0 px-4">
+  <img
+    src={player.image}
+    alt={player.name}
+    className="h-full w-auto object-contain drop-shadow-2xl"
+    style={{ maxHeight: '280px' }}
+  />
+</div>
 
                   {/* Player Info */}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6 pt-24">

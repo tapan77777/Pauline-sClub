@@ -233,7 +233,7 @@ const BasketballClubApp = () => {
           <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-gray-800">Admin Login</h2>
-              <button onClick={() => { setShowLogin(false); setPassword(''); setLoginError(''); }} className="text-gray-500 hover:text-gray-700">
+              <button onClick={() => { setShowLogin(false); setPassword(''); setLoginError(''); }} className="text-black-500 hover:text-black-700">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -244,7 +244,7 @@ const BasketballClubApp = () => {
                 onChange={(e) => { setPassword(e.target.value); setLoginError(''); }}
                 onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
                 placeholder="Enter admin password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-4 py-3 border text-black-500 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
               {loginError && <p className="text-red-500 text-sm">{loginError}</p>}
               <button onClick={handleLogin} className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg font-semibold transition">
