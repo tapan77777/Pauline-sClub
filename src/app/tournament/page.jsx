@@ -33,7 +33,7 @@ const TournamentPage = () => {
   
  const [newTeam, setNewTeam] = useState({
   name: '',
-  logo: '⚽',
+  logo: '🏀',
   group: 'A'  // ADD THIS
 });
   
@@ -143,7 +143,7 @@ const addTeamToTournament = () => {
     group: selectedTournament.format === 'Group Stage' ? newTeam.group : null  // ADD THIS
   });
   
-  setNewTeam({ name: '', logo: '⚽', group: 'A' });
+  setNewTeam({ name: '', logo: '🏀', group: 'A' });
   setShowAddTeam(false);
 };
 
@@ -256,9 +256,9 @@ const addTeamToTournament = () => {
   };
 
   const getTeamLogo = (teamId) => {
-    if (!selectedTournament?.teams) return '⚽';
+    if (!selectedTournament?.teams) return '🏀';
     const team = selectedTournament.teams[teamId];
-    return team ? team.logo : '⚽';
+    return team ? team.logo : '🏀';
   };
 
 const getSortedStandings = (group = null) => {
