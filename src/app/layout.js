@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Paulines Club",
+  title: "OUTR Basketball",
   description: "Basketball Excellence",
 };
 
