@@ -62,24 +62,29 @@ const [showNameInput, setShowNameInput] = useState(true);
     return () => unsubscribe();
   }, []);
 
-  // Firebase: Listen to current match
-  useEffect(() => {
-    const matchRef = ref(database, 'currentMatch');
-    const unsubscribe = onValue(matchRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        setCurrentMatch({
-          homeScore: data.homeScore || 0,
-          awayScore: data.awayScore || 0,
-          awayTeam: data.awayTeam || 'Opponent Team',
-          quarter: data.quarter || 1,
-          isLive: data.isLive || false,
-          players: data.players || []
-        });
-      }
-    });
-    return () => unsubscribe();
-  }, []);
+// Firebase: Listen to current match (FIXED - MERGE STATE)
+useEffect(() => {
+  const matchRef = ref(database, 'currentMatch');
+  const unsubscribe = onValue(matchRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    setCurrentMatch(prev => ({
+      ...prev,
+      homeScore: data.homeScore ?? 0,
+      awayScore: data.awayScore ?? 0,
+      awayTeam: data.awayTeam ?? 'Opponent Team',
+      quarter: data.quarter ?? 1,
+      isLive: data.isLive ?? false,
+      players: data.players ?? [],
+      matchDate: data.matchDate ?? prev.matchDate,
+      startTime: data.startTime ?? prev.startTime,
+    }));
+  });
+
+  return () => unsubscribe();
+}, []);
+
 
   // Firebase: Listen to match history
   useEffect(() => {
@@ -100,7 +105,7 @@ const [showNameInput, setShowNameInput] = useState(true);
     return () => unsubscribe();
   }, []);
 
-  
+
 // Firebase: Listen to cheers
 useEffect(() => {
   const cheersRef = ref(database, 'currentMatch/cheers');
@@ -446,7 +451,7 @@ const getTwitchEmbedUrl = (url) => {
               <div className="text-center mb-4">
                 <div className="text-sm text-gray-600 mb-2">{selectedMatchDetail.date}</div>
                 <div className="text-2xl font-bold text-gray-800 mb-2">
-                  Paulines Club vs {selectedMatchDetail.opponent}
+                  OUTR vs {selectedMatchDetail.opponent}
                 </div>
                 <div className="text-4xl font-bold text-gray-800">
                   {selectedMatchDetail.homeScore} - {selectedMatchDetail.awayScore}
@@ -597,7 +602,7 @@ const getTwitchEmbedUrl = (url) => {
         <div className="max-w-6xl mx-auto px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Paulines Club</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">OUTR</h1>
               <p className="text-orange-100 text-xs sm:text-sm mt-1">Basketball Excellence</p>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
@@ -843,7 +848,7 @@ const getTwitchEmbedUrl = (url) => {
                 <div className="grid grid-cols-3 gap-4 sm:gap-8 items-center mb-6 sm:mb-8">
                   <div className="text-center">
                     <div className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">HOME</div>
-                    <div className="text-sm sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-3">Paulines Club</div>
+                    <div className="text-sm sm:text-2xl font-bold text-gray-800 mb-2 sm:mb-3">OUTR</div>
                     <div className="text-4xl sm:text-6xl font-bold text-orange-600 mb-3 sm:mb-4">{currentMatch.homeScore}</div>
                     {isAdmin && currentMatch.isLive && (
                       <div className="flex gap-1 sm:gap-2 justify-center flex-wrap">
@@ -1146,7 +1151,7 @@ const getTwitchEmbedUrl = (url) => {
                       </div>
                       <div>
                         <div className="text-base sm:text-lg font-bold text-gray-800">
-                          Paulines Club vs {match.opponent}
+                          OUTR vs {match.opponent}
                         </div>
                         <div className="text-xs sm:text-sm text-gray-600">{match.date}</div>
                       </div>
